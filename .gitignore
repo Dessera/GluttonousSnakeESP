@@ -1,0 +1,7 @@
+.pio
+
+.cache
+.vscode/*
+!.vscode/launch.json
+!.vscode/extensions.json
+
