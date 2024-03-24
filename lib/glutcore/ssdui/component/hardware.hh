@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * @file hardware.hh
+ * @author Dessera (1533653159@qq.com)
+ * @brief 硬件配置命令，在初始化时设置，后不可更改
+ * @version 0.1
+ * @date 2024-03-23
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
+
 #include <cstdint>
 
 #include "ssdui/context/config.hh"
@@ -9,6 +20,11 @@
 
 namespace ssdui::command::hardware {
 
+/**
+ * @brief 设置预充电周期
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetPrechargePeriod {
@@ -23,12 +39,17 @@ class SetPrechargePeriod {
   explicit SetPrechargePeriod(uint8_t period_phase1, uint8_t period_phase2)
       : m_period_phase1(period_phase1), m_period_phase2(period_phase2) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command({COMMAND_SET_PRECHARGE_PERIOD,
                               (m_period_phase2 << 4) | m_period_phase1});
   }
 };
 
+/**
+ * @brief 设置VCOMH电压
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetVCOMH {
@@ -42,11 +63,16 @@ class SetVCOMH {
   explicit SetVCOMH(uint8_t vcomh_deselect_level)
       : m_vcomh_deselect_level(vcomh_deselect_level) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command({COMMAND_SET_VCOMH, m_vcomh_deselect_level});
   }
 };
 
+/**
+ * @brief 设置显示起始行
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetDisplayStartLine {
@@ -59,11 +85,16 @@ class SetDisplayStartLine {
  public:
   explicit SetDisplayStartLine(uint8_t start_line) : m_start_line(start_line) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command({COMMAND_SET_DISPLAY_START_LINE | m_start_line});
   }
 };
 
+/**
+ * @brief 设置SEG重映射
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetSegmentRemap {
@@ -77,12 +108,23 @@ class SetSegmentRemap {
  public:
   explicit SetSegmentRemap(bool remap) : m_remap(remap) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command(
         {m_remap ? COMMAND_SET_SEGMENT_REMAP : COMMAND_SET_SEGMENT_NORMAL});
   }
 };
 
+// alias for SetSegmentRemap
+template <typename Rnd>
+  requires render::IsRenderer<Rnd>
+using SetHorizontalFlip = SetSegmentRemap<Rnd>;
+
+/**
+ * @brief 设置MUX比例
+ *
+ * @tparam Rnd 渲染器类型
+ * @note 此处使用原始值 N 而非 N-1，因此相比SSD1306的原命令，要增加1
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetMultiplexRatio {
@@ -95,11 +137,16 @@ class SetMultiplexRatio {
  public:
   explicit SetMultiplexRatio(uint8_t ratio) : m_ratio(ratio) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command({COMMAND_SET_MULTIPLEX_RATIO, m_ratio - 1});
   }
 };
 
+/**
+ * @brief 设置COM输出扫描方向
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetComOutputScanDirection {
@@ -114,13 +161,23 @@ class SetComOutputScanDirection {
  public:
   explicit SetComOutputScanDirection(bool reverse) : m_reverse(reverse) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command({m_reverse
                                   ? COMMAND_SET_COM_OUTPUT_SCAN_DIRECTION_REMAP
                                   : COMMAND_SET_COM_OUTPUT_SCAN_DIRECTION});
   }
 };
 
+// alias for SetComOutputScanDirection
+template <typename Rnd>
+  requires render::IsRenderer<Rnd>
+using SetVerticalFlip = SetComOutputScanDirection<Rnd>;
+
+/**
+ * @brief 设置显示偏移
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetDisplayOffset {
@@ -133,11 +190,16 @@ class SetDisplayOffset {
  public:
   explicit SetDisplayOffset(uint8_t offset) : m_offset(offset) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command({COMMAND_SET_DISPLAY_OFFSET, m_offset});
   }
 };
 
+/**
+ * @brief 设置COM硬件配置
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetComPinsHardwareConfiguration {
@@ -152,12 +214,17 @@ class SetComPinsHardwareConfiguration {
   explicit SetComPinsHardwareConfiguration(context::ComPinsConfig config)
       : m_config(config) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command({COMMAND_SET_COM_PINS_HARDWARE_CONFIGURATION,
                               static_cast<uint8_t>(m_config)});
   }
 };
 
+/**
+ * @brief 设置时钟分频和频率
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetClockRatioAndFrequency {
@@ -172,12 +239,17 @@ class SetClockRatioAndFrequency {
   SetClockRatioAndFrequency(uint8_t ratio, uint8_t frequency)
       : m_ratio(ratio), m_frequency(frequency) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command(
         {COMMAND_SET_CLOCK_RATIO_AND_FREQUENCY, (m_frequency << 4) | m_ratio});
   }
 };
 
+/**
+ * @brief 设置充电泵
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetChargePump {
@@ -192,7 +264,7 @@ class SetChargePump {
  public:
   explicit SetChargePump(bool enable) : m_enable(enable) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command(
         {COMMAND_SET_CHARGE_PUMP, m_enable ? COMMAND_SET_CHARGE_PUMP_ENABLE
                                            : COMMAND_SET_CHARGE_PUMP_DISABLE});

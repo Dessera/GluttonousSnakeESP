@@ -1,13 +1,18 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include "ssdui/context/config.hh"
 #include "ssdui/context/core.hh"
-// #include "ssdui/render/concept.hh"
 
 namespace ssdui::command::address {
 
+/**
+ * @brief 设置起始列，用于页寻址模式
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetStartColumn {
@@ -22,7 +27,17 @@ class SetStartColumn {
  public:
   explicit SetStartColumn(uint8_t column) : m_column(column) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
+    const auto& config = ctx->config();
+
+    if (config.addressing_mode != context::AddressMode::PAGE) {
+      return;
+    }
+
+    if (m_column >= config.width) {
+      return;
+    }
+
     ctx->renderer()->command({COMMAND_SET_START_COLUMN_LOW,
                               static_cast<uint8_t>(m_column & COLUMN_MASK),
                               COMMAND_SET_START_COLUMN_HIGH,
@@ -30,6 +45,11 @@ class SetStartColumn {
   }
 };
 
+/**
+ * @brief 设置起始页，用于页寻址模式
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetStartPage {
@@ -42,11 +62,26 @@ class SetStartPage {
  public:
   explicit SetStartPage(uint8_t page) : m_page(page) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
+    const auto& config = ctx->config();
+
+    if (config.addressing_mode != context::AddressMode::PAGE) {
+      return;
+    }
+
+    if (m_page >= config.page) {
+      return;
+    }
+
     ctx->renderer()->command({COMMAND_SET_START_PAGE | m_page});
   }
 };
 
+/**
+ * @brief 设置寻址模式
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetAddressingMode {
@@ -59,12 +94,17 @@ class SetAddressingMode {
  public:
   explicit SetAddressingMode(context::AddressMode mode) : m_mode(mode) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command(
         {COMMAND_SET_ADDRESSING_MODE, static_cast<uint8_t>(m_mode)});
   }
 };
 
+/**
+ * @brief 设置列地址范围，用于水平寻址模式和垂直寻址模式
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetColumnAddress {
@@ -79,12 +119,28 @@ class SetColumnAddress {
   explicit SetColumnAddress(uint8_t start_column, uint8_t end_column)
       : m_start_column(start_column), m_end_column(end_column) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
+    const auto& config = ctx->config();
+
+    if (config.addressing_mode == context::AddressMode::PAGE) {
+      // downcast to SetStartColumn
+      ctx->run(SetStartColumn<Rnd>(m_start_column));
+    }
+
+    if (m_start_column >= config.width || m_end_column >= config.width) {
+      return;
+    }
+
     ctx->renderer()->command(
         {COMMAND_SET_COLUMN_ADDRESS, m_start_column, m_end_column});
   }
 };
 
+/**
+ * @brief 设置页地址范围，用于水平寻址模式和垂直寻址模式
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetPageAddress {
@@ -99,7 +155,18 @@ class SetPageAddress {
   explicit SetPageAddress(uint8_t start_page, uint8_t end_page)
       : m_start_page(start_page), m_end_page(end_page) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
+    const auto& config = ctx->config();
+
+    if (config.addressing_mode == context::AddressMode::PAGE) {
+      // downcast to SetStartPage
+      ctx->run(SetStartPage<Rnd>(m_start_page));
+    }
+
+    if (m_start_page >= config.page || m_end_page >= config.page) {
+      return;
+    }
+
     ctx->renderer()->command(
         {COMMAND_SET_PAGE_ADDRESS, m_start_page, m_end_page});
   }

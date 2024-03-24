@@ -1,45 +1,54 @@
 #include <Arduino.h>
 
+#include <cstdint>
 #include <memory>
 #include <ssdui/all.hh>
+#include <vector>
 
-void write_command(uint8_t cmd) {
-  Wire.beginTransmission(0x3C);
-  Wire.write(0x00);
-  Wire.write(cmd);
-  Wire.endTransmission();
-}
+#include "esp32-hal-gpio.h"
 
 void setup() {
-  delay(100);
-
   using SSDrvConfig = ssdui::context::Config;
+
   using SSDrvRenderer = ssdui::render::DefaultRenderer;
-  using SSDrvBuilder = ssdui::context::ContextBuilder<SSDrvRenderer>;
+  // using SSDrvBuilder = ssdui::context::ContextBuilder<SSDrvRenderer>;
+  using SSDrvContext = ssdui::context::Context<SSDrvRenderer>;
   using SSDrvInitializer =
       ssdui::command::initializer::DefaultInitializer<SSDrvRenderer>;
 
-  auto ctx = SSDrvBuilder()
-                 .config(SSDrvConfig())
-                 .renderer(std::make_unique<SSDrvRenderer>(&Wire, 0x3C))
-                 .build()
-                 ->run(SSDrvInitializer());
+  Serial.begin(115200);
 
-  for (int i = 0; i < 128 * 8; i++) {
-    ctx->renderer()->data({0xFF});
-  }
+  // auto ctx = SSDrvBuilder()
+  //                .config(SSDrvConfig())
+  //                .renderer(std::make_unique<SSDrvRenderer>(&Wire, 0x3C))
+  //                .build();
+  // auto ctx = std::make_unique<SSDrvContext>(
+  //     SSDrvConfig(), std::make_unique<SSDrvRenderer>(&Wire, 0x3C));
 
-  write_command(0x21);  // set column address
-  write_command(0x00);  // column start address
-  write_command(0x7F);  // column end address
-  write_command(0x22);  // set page address
-  write_command(0x00);  // page start address
-  write_command(0x07);  // page end address
+  // ctx->run(SSDrvInitializer());
 
-  for (int i = 0; i < 128 * 8; i++) {
-    ctx->renderer()->data({0x00});
-    delay(10);
-  }
+  // // get current time
+  // auto now = std::chrono::system_clock::now();
+
+  // // const auto data = std::vector<uint8_t>(128 * 8, 0xFF);
+
+  // // // fill blank screen for many times
+  // for (int i = 0; i < 100; i++) {
+  //   if (i % 2 == 0)
+  //     ctx->renderer()->data(std::vector<uint8_t>(128 * 8, 0x00));
+  //   else
+  //     ctx->renderer()->data(std::vector<uint8_t>(128 * 8, 0xFF));
+
+  //   delay(1000);
+  // }
+
+  // // // get elapsed time
+  // auto elapsed = std::chrono::system_clock::now() - now;
+
+  // // // print elapsed time
+  // Serial.print("Elapsed time: ");
+  // Serial.println(
+  //     std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
 }
 
-void loop() { delay(1000); }
+void loop() { delay(100); }

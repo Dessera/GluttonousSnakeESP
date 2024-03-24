@@ -21,14 +21,9 @@ class DefaultRenderer {
   TwoWire* m_wire;
   uint8_t m_address;
 
-  uint8_t m_sda;
-  uint8_t m_scl;
-
  public:
-  DefaultRenderer(TwoWire* wire, uint8_t address, uint8_t sda = 4,
-                  uint8_t scl = 5)
+  DefaultRenderer(TwoWire* wire, uint8_t address)
       : m_wire(wire), m_address(address) {
-    wire->setPins(sda, scl);
     wire->begin();
   }
 

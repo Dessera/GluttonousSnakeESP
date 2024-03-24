@@ -6,17 +6,27 @@
 
 namespace ssdui::command::fundamental {
 
+/**
+ * @brief 什么都不做
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class Nop {
  public:
   static inline constexpr uint8_t COMMAND_CODE = 0xE3;
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command({COMMAND_CODE});
   }
 };
 
+/**
+ * @brief 设置显示开关
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetDisplay {
@@ -30,12 +40,17 @@ class SetDisplay {
  public:
   explicit SetDisplay(bool state) : m_state(state) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command(
         {m_state ? COMMAND_DISPLAY_ON : COMMAND_DISPLAY_OFF});
   }
 };
 
+/**
+ * @brief 设置对比度
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetContrast {
@@ -48,11 +63,16 @@ class SetContrast {
  public:
   explicit SetContrast(uint8_t contrast) : m_contrast(contrast) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command({COMMAND_SET_CONTRAST, m_contrast});
   }
 };
 
+/**
+ * @brief 设置显示反转
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetInvert {
@@ -66,12 +86,17 @@ class SetInvert {
  public:
   explicit SetInvert(bool state) : m_state(state) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command(
         {m_state ? COMMAND_INVERT_ON : COMMAND_INVERT_OFF});
   }
 };
 
+/**
+ * @brief 设置显示全亮
+ *
+ * @tparam Rnd 渲染器类型
+ */
 template <typename Rnd>
   requires render::IsRenderer<Rnd>
 class SetEntireDisplay {
@@ -85,7 +110,7 @@ class SetEntireDisplay {
  public:
   explicit SetEntireDisplay(bool state) : m_state(state) {}
 
-  void operator()(std::shared_ptr<context::Context<Rnd>> ctx) const {
+  void operator()(context::Context<Rnd>* ctx) const {
     ctx->renderer()->command(
         {m_state ? COMMAND_ENTIRE_DISPLAY_ON : COMMAND_ENTIRE_DISPLAY_OFF});
   }
